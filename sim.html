@@ -10,42 +10,123 @@
         <script>
             $(document).ready(function() {
                 clearResults();
+                showSetupData();
 
-                $("#test-button").click(function() {
+                $("#make-results-button").click(function() {
                     makeResults();
                 });
 
-                $("#test-reset-button").click(function() {
+                $("#reset-button").click(function() {
                     clearResults();
                 });
             });
 
+            var P0 = {x:0, y:0};
+            var P1 = {x:3, y:9};
+            var P2 = {x:6, y:10};
+            var P3 = {x:10, y:10};
+            var NUM_SLICES = 10;
+
+            function showSetupData()
+            {
+                var output = "<table border='1'><tr><th>Control Point</th><th>x</th><th>y</th></tr>";
+                output += "<tr><td>P0</td><td>" + P0.x + "</td><td>" + P0.y + "</td></tr>";
+                output += "<tr><td>P1</td><td>" + P1.x + "</td><td>" + P1.y + "</td></tr>";
+                output += "<tr><td>P2</td><td>" + P2.x + "</td><td>" + P2.y + "</td></tr>";
+                output += "<tr><td>P3</td><td>" + P3.x + "</td><td>" + P3.y + "</td></tr>";
+                output += "</table>";
+
+                $("#setup-data").html(output);
+            }
+
+            function calculatePointOnCurve(t)
+            {
+                // B(t) = (1−t)^3*P0 + 3*(1−t)^2*t*P1 + 3*(1−t)*t^2*P2 + t^3*P3 where 0≤t≤1
+                // P0, P1, P2, and P3 are the control points for the curve
+
+                if(t === 0) {
+                    return P0;
+                }
+
+                var invT = (1 - t);
+
+                var p0result = {x:0, y:0};
+                var p1result = {x:0, y:0};
+                var p2result = {x:0, y:0};
+                var p3result = {x:0, y:0};
+
+                // remember, quick-and-dirty... this math is not optimized ;)
+
+                p0result.x = Math.pow(invT, 3) * P0.x;
+                p0result.y = Math.pow(invT, 3) * P0.y;
+
+                p1result.x = 3 * Math.pow(invT, 2) * t * P1.x;
+                p1result.y = 3 * Math.pow(invT, 2) * t * P1.y;
+
+                p2result.x = 3 * invT * Math.pow(t, 2) * P2.x;
+                p2result.y = 3 * invT * Math.pow(t, 2) * P2.y;
+
+                p3result.x = Math.pow(t, 3) * P3.x;
+                p3result.y = Math.pow(t, 3) * P3.y;
+
+                return {x: p0result.x + p1result.x + p2result.x + p3result.x, y: p0result.y + p1result.y + p2result.y + p3result.y};
+            }
+
             function makeResults()
             {
-                $("#test-results").html("Whoa, it did <i>something</i>?");
+                var output = "<table border='1'><tr><th>Slice</th><th>x</th><th>y</th></tr>";
+                for(var slice = 0; slice <= NUM_SLICES; ++slice) {
+                    var val = calculatePointOnCurve(slice / NUM_SLICES);
+                    output += "<tr><td>" + slice + "</td><td>" + val.x + "</td><td>" + val.y + "</td></tr>";
+                }
+                output += "</table>";
+
+                $("#results-output").html(output);
                 $("#results-area").show();
             }
 
             function clearResults()
             {
                 $("#results-area").hide();
-                $("#test-results").html("");
+                $("#results-output").html("");
             }
         </script>
         <style>
+            #make-results-button {
+                margin-top: 5px;
+            }
+
             #results-area {
                 margin-top: 15px;
+            }
+
+            #reset-button {
+                margin-top: 5px;
+            }
+
+            table {
+                border: 1px;
+                border-collapse: collapse;
+
+                th {
+                    padding: 5px;
+                }
+
+                td {
+                    padding: 5px;
+                }
             }
         </style>
     </head>
     <body>
         <h1>Super Cool Simulation</h1>
 
-        <div><button type="button" id="test-button">Make Something Happen!</button></div>
+        <div id="setup-data"></div>
+        <div><button type="button" id="make-results-button">Calculate</button></div>
 
         <div id="results-area">
-            <div id="test-results"></div>
-            <div><button type="button" id="test-reset-button">Reset</button></div>
+            <div id="results-output"></div>
+            <div><button type="button" id="reset-button">Reset</button></div>
         </div>
     </body>
 </html>
