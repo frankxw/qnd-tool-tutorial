@@ -3,9 +3,49 @@
     <head>
         <meta charset="utf-8" />
         <title>Cool Simulation</title>
+        <script
+              src="https://code.jquery.com/jquery-3.7.1.min.js"
+              integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+              crossorigin="anonymous"></script>
+        <script>
+            $(document).ready(function() {
+                clearResults();
+
+                $("#test-button").click(function() {
+                    makeResults();
+                });
+
+                $("#test-reset-button").click(function() {
+                    clearResults();
+                });
+            });
+
+            function makeResults()
+            {
+                $("#test-results").html("Whoa, it did <i>something</i>?");
+                $("#results-area").show();
+            }
+
+            function clearResults()
+            {
+                $("#results-area").hide();
+                $("#test-results").html("");
+            }
+        </script>
+        <style>
+            #results-area {
+                margin-top: 15px;
+            }
+        </style>
     </head>
     <body>
         <h1>Super Cool Simulation</h1>
-        Coming Soon™
+
+        <div><button type="button" id="test-button">Make Something Happen!</button></div>
+
+        <div id="results-area">
+            <div id="test-results"></div>
+            <div><button type="button" id="test-reset-button">Reset</button></div>
+        </div>
     </body>
 </html>
