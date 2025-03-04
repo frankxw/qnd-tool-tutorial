@@ -29,3 +29,27 @@ function makeResults()
 }
 ```
 `element.html("html goes here")` is the jQuery method to replace the inner html of the specified element.
+
+## Part 2
+Now we will start doing something useful.  Let's imagine we want a tool to spit out some numbers and base those numbers on a [bezier curve](https://en.wikipedia.org/wiki/B%C3%A9zier_curve).  The cubic bezier function expects 4 control points (where the first and last are the start and end points of the curve):
+```
+B(t) = (1−t)^3*P0 + 3*(1−t)^2*t*P1 + 3*(1−t)*t^2*P2 + t^3*P3 where 0 ≤ t ≤ 1
+```
+We are going to calculate [this curve](https://www.desmos.com/calculator/yxgjpzx162).  We setup our control points as follows:
+```
+var P0 = {x:0, y:0};
+var P1 = {x:3, y:9};
+var P2 = {x:6, y:10};
+var P3 = {x:10, y:10};
+```
+We are setting these up as Javascript objects - you can think of these like dictionaries in other languages.
+
+Now all we have to do is calculate the x,y values at certain points and spit out the results in a table.  We'll make the assumption that we want to output 10 evenly spaced slices of the curve (technically 11).  See `calculatePointOnCurve()` and note that this is quick and DIRTY.
+
+Side note, you may have noticed the following:
+```
+if(t === 0) {
+    return P0;
+}
+```
+Do yourself a favor and just default to triple equals `===` in Javascript.  You'll save yourself lots of headaches if you use [strict equals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality) by default - avoiding weird conversions (unless you intend to do so, in which case use `==`).
