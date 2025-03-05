@@ -7,8 +7,10 @@
               src="https://code.jquery.com/jquery-3.7.1.min.js"
               integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
               crossorigin="anonymous"></script>
-        <script>
-            $(document).ready(function() {
+		<script type="module">
+			import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+			
+			$(document).ready(function() {
                 clearResults();
 				resetDefaults();
 
@@ -17,7 +19,7 @@
                     makeResults();
                 });
 
-                $("#reset-button").click(function() {
+                $(".reset-button").click(function() {
                     clearResults();
                 });
 				
@@ -101,25 +103,101 @@
 
             function makeResults()
             {
-				var output = "<div class='top-bot-space-small'><h2>Results</h2></div>";
-                output += "<table border='1'><tr><th>Slice</th><th>x</th><th>y</th></tr>";
+                var output = "<table border='1'><tr><th>Slice</th><th>x</th><th>y</th></tr>";
                 for(var slice = 0; slice <= SimData.NumSlices; ++slice) {
                     var val = calculatePointOnCurve(slice / SimData.NumSlices);
                     output += "<tr><td>" + slice + "</td><td>" + val.x + "</td><td>" + val.y + "</td></tr>";
                 }
                 output += "</table>";
 
-                $("#results-output").html(output);
+                $("#results-table").html(output);
                 $("#results-area").show();
+				
+				makeGraph();
             }
 
             function clearResults()
             {
                 $("#results-area").hide();
-                $("#results-output").html("");
-				resetDefaults();
+                $("#results-table").html("");
             }
-        </script>
+			
+			// Arbitrary dimensions
+			const width = 800;
+			const height = 600;
+			const marginTop = 100;
+			const marginRight = 100;
+			const marginBottom = 100;
+			const marginLeft = 100;
+			
+			function GetSimRangeWidth()
+			{
+				return SimData.P3.x - SimData.P0.x;
+			}
+			
+			function GetSimRangeHeight()
+			{
+				return SimData.P3.y - SimData.P0.y;
+			}
+			
+			function getXGraphPoint(x)
+			{
+				// We have to fit in our space, so we need the actual width of the draw space (within the margins)
+				var totalWidth = width - marginLeft - marginRight;
+				// The coordinate is our percent in the space
+				var coord = (x - SimData.P0.x) / GetSimRangeWidth();
+				return (coord * totalWidth) + marginLeft;
+			}
+			
+			function getYGraphPoint(y)
+			{
+				// We have to fit in our space, so we need the actual height of the draw space (within the margins)
+				var totalHeight = height - marginTop - marginBottom;
+				// The coordinate is our percent in the space
+				var coord = (y - SimData.P0.y) / GetSimRangeHeight();
+				// Note that for y <0,0> is the top left of the DOM element, so we need to flip
+				return (-coord * totalHeight) + (height - marginBottom);
+			}
+			
+			function drawCurve(context)
+			{
+				context.moveTo(getXGraphPoint(SimData.P0.x), getYGraphPoint(SimData.P0.y));
+				context.bezierCurveTo(getXGraphPoint(SimData.P1.x), getYGraphPoint(SimData.P1.y), getXGraphPoint(SimData.P2.x), getYGraphPoint(SimData.P2.y), getXGraphPoint(SimData.P3.x), getYGraphPoint(SimData.P3.y));
+				return context;
+			}
+
+			function makeGraph()
+			{
+				const x = d3.scaleLinear()
+					.domain([SimData.P0.x, SimData.P3.x])
+					.range([marginLeft, width - marginRight]);
+				const y = d3.scaleLinear()
+					.domain([SimData.P0.y, SimData.P3.y])
+					.range([height - marginBottom, marginTop]);
+
+				const svg = d3.create("svg")
+					.attr("width", width)
+					.attr("height", height);
+
+				// x-axis
+				svg.append("g")
+					.attr("transform", `translate(0,${height - marginBottom})`)
+					.call(d3.axisBottom(x));
+
+				// y-axis
+				svg.append("g")
+					.attr("transform", `translate(${marginLeft},0)`)
+					.call(d3.axisLeft(y));
+					
+				// curve
+				svg.append("path")
+					.style("stroke", "black")
+					.style("fill", "none")
+					.attr("d", drawCurve(d3.path()));
+
+				$("#results-graph").html(svg.node());
+			}
+		</script>
         <style>
             #results-area {
                 margin-top: 50px;
@@ -154,22 +232,22 @@
 					<th>y</th>
 				</tr>
 				<tr>
-					<td>P0</td>
+					<td>P0 "Starting Point"</td>
 					<td><input type="text" id="input-p0-x" /></td>
 					<td><input type="text" id="input-p0-y" /></td>
 				</tr>
 				<tr>
-					<td>P1</td>
+					<td>P1 "Control Point 1"</td>
 					<td><input type="text" id="input-p1-x" /></td>
 					<td><input type="text" id="input-p1-y" /></td>
 				</tr>
 				<tr>
-					<td>P2</td>
+					<td>P2 "Control Point 2"</td>
 					<td><input type="text" id="input-p2-x" /></td>
 					<td><input type="text" id="input-p2-y" /></td>
 				</tr>
 				<tr>
-					<td>P3</td>
+					<td>P3 "End Point"</td>
 					<td><input type="text" id="input-p3-x" /></td>
 					<td><input type="text" id="input-p3-y" /></td>
 				</tr>
@@ -179,8 +257,11 @@
 		</div>
 
         <div id="results-area">
-            <div id="results-output"></div>
-            <div class="top-bot-space-small"><button type="button" id="reset-button">Reset</button></div>
+			<div class="top-bot-space-small"><h2>Results</h2></div>
+			<div class="top-bot-space-small"><button type="button" class="reset-button">Reset</button></div>
+			<div class="top-bot-space-small" id="results-graph"></div>
+            <div id="results-table"></div>
+            <div class="top-bot-space-small"><button type="button" class="reset-button">Reset</button></div>
         </div>
     </body>
 </html>

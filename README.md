@@ -81,3 +81,20 @@ Similarly we can get the values from those textboxes and update our internal str
 SimData.P0.x = Number($("#input-p0-x").val());
 ```
 Since we are always casting the input to a Number, we don't have to worry _too_ much about bad input.  Since this is quick and dirty, let's just assume our users aren't going to mess up that badly (the worst that will happen is the output won't be correct when they click the button).
+
+## Part 4
+Now it's time to start getting _POWERFUL_.  Let's be real, most of us are visual creatures so let's make a graph.  We'll go ahead and use [d3.js](https://d3js.org/) (though there's plenty of other options out there).  We can import and use d3 like so:
+```
+<script type="module">
+	import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+	// do stuff with d3.js
+</script>
+```
+
+Take a look at `makeGraph()` to see a very basic example of how to draw a curve.  There is slightly complicated logic in `getXGraphPoint(x)` and `getYGraphPoint(y)` to properly align the output to the graph space.
+Note that we are cheating a little bit with the following:
+```
+context.moveTo(getXGraphPoint(SimData.P0.x), getYGraphPoint(SimData.P0.y));
+context.bezierCurveTo(getXGraphPoint(SimData.P1.x), getYGraphPoint(SimData.P1.y), getXGraphPoint(SimData.P2.x), getYGraphPoint(SimData.P2.y), getXGraphPoint(SimData.P3.x), getYGraphPoint(SimData.P3.y));
+```
+Ideally we'd construct all the segments from the values we calculated, but this is QUICK after all...
