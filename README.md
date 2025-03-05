@@ -53,3 +53,31 @@ if(t === 0) {
 }
 ```
 Do yourself a favor and just default to triple equals `===` in Javascript.  You'll save yourself lots of headaches if you use [strict equals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality) by default - avoiding weird conversions (unless you intend to do so, in which case use `==`).
+
+## Part 3
+The next step is to start making this simulator more generic.  We will add user input for the control points.
+
+First, we will go ahead and add the necessary input textboxes instead of displaying the defaults only:
+```
+<input type="text" id="input-p0-x" />
+```
+
+Our internal state data now looks like this:
+```
+var SimData = {
+	P0: {x:0, y:0},
+	P1: {x:0, y:0},
+	P2: {x:0, y:0},
+	P3: {x:0, y:0},
+	NumSlices: 0
+};
+```
+We can update the textboxes with initial values like so:
+```
+$("#input-p0-x").val(SimData.P0.x);
+```
+Similarly we can get the values from those textboxes and update our internal structure like so:
+```
+SimData.P0.x = Number($("#input-p0-x").val());
+```
+Since we are always casting the input to a Number, we don't have to worry _too_ much about bad input.  Since this is quick and dirty, let's just assume our users aren't going to mess up that badly (the worst that will happen is the output won't be correct when they click the button).
