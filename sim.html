@@ -10,34 +10,61 @@
         <script>
             $(document).ready(function() {
                 clearResults();
-                showSetupData();
+				resetDefaults();
 
                 $("#make-results-button").click(function() {
+					gatherInputs();
                     makeResults();
                 });
 
                 $("#reset-button").click(function() {
                     clearResults();
                 });
+				
+				$("#reset-defaults-button").click(function() {
+					resetDefaults();
+				});
             });
-
-            var P0 = {x:0, y:0};
-            var P1 = {x:3, y:9};
-            var P2 = {x:6, y:10};
-            var P3 = {x:10, y:10};
-            var NUM_SLICES = 10;
-
-            function showSetupData()
-            {
-                var output = "<table border='1'><tr><th>Control Point</th><th>x</th><th>y</th></tr>";
-                output += "<tr><td>P0</td><td>" + P0.x + "</td><td>" + P0.y + "</td></tr>";
-                output += "<tr><td>P1</td><td>" + P1.x + "</td><td>" + P1.y + "</td></tr>";
-                output += "<tr><td>P2</td><td>" + P2.x + "</td><td>" + P2.y + "</td></tr>";
-                output += "<tr><td>P3</td><td>" + P3.x + "</td><td>" + P3.y + "</td></tr>";
-                output += "</table>";
-
-                $("#setup-data").html(output);
-            }
+			
+			var SimData = {
+				P0: {x:0, y:0},
+				P1: {x:0, y:0},
+				P2: {x:0, y:0},
+				P3: {x:0, y:0},
+				NumSlices: 0
+			};
+			
+			function resetDefaults()
+			{
+				SimData.P0 = {x:0, y:0};
+				SimData.P1 = {x:3, y:9};
+				SimData.P2 = {x:6, y:10};
+				SimData.P3 = {x:10, y:10};
+				SimData.NumSlices = 10;
+				
+				$("#input-p0-x").val(SimData.P0.x);
+				$("#input-p0-y").val(SimData.P0.y);
+				$("#input-p1-x").val(SimData.P1.x);
+				$("#input-p1-y").val(SimData.P1.y);
+				$("#input-p2-x").val(SimData.P2.x);
+				$("#input-p2-y").val(SimData.P2.y);
+				$("#input-p3-x").val(SimData.P3.x);
+				$("#input-p3-y").val(SimData.P3.y);
+				$("#input-num-slices").val(SimData.NumSlices);
+			}
+			
+			function gatherInputs()
+			{
+				SimData.P0.x = Number($("#input-p0-x").val());
+				SimData.P0.y = Number($("#input-p0-y").val());
+				SimData.P1.x = Number($("#input-p1-x").val());
+				SimData.P1.y = Number($("#input-p1-y").val());
+				SimData.P2.x = Number($("#input-p2-x").val());
+				SimData.P2.y = Number($("#input-p2-y").val());
+				SimData.P3.x = Number($("#input-p3-x").val());
+				SimData.P3.y = Number($("#input-p3-y").val());
+				SimData.NumSlices = Number($("#input-num-slices").val());
+			}
 
             function calculatePointOnCurve(t)
             {
@@ -45,7 +72,7 @@
                 // P0, P1, P2, and P3 are the control points for the curve
 
                 if(t === 0) {
-                    return P0;
+                    return SimData.P0;
                 }
 
                 var invT = (1 - t);
@@ -57,26 +84,27 @@
 
                 // remember, quick-and-dirty... this math is not optimized ;)
 
-                p0result.x = Math.pow(invT, 3) * P0.x;
-                p0result.y = Math.pow(invT, 3) * P0.y;
+                p0result.x = Math.pow(invT, 3) * SimData.P0.x;
+                p0result.y = Math.pow(invT, 3) * SimData.P0.y;
 
-                p1result.x = 3 * Math.pow(invT, 2) * t * P1.x;
-                p1result.y = 3 * Math.pow(invT, 2) * t * P1.y;
+                p1result.x = 3 * Math.pow(invT, 2) * t * SimData.P1.x;
+                p1result.y = 3 * Math.pow(invT, 2) * t * SimData.P1.y;
 
-                p2result.x = 3 * invT * Math.pow(t, 2) * P2.x;
-                p2result.y = 3 * invT * Math.pow(t, 2) * P2.y;
+                p2result.x = 3 * invT * Math.pow(t, 2) * SimData.P2.x;
+                p2result.y = 3 * invT * Math.pow(t, 2) * SimData.P2.y;
 
-                p3result.x = Math.pow(t, 3) * P3.x;
-                p3result.y = Math.pow(t, 3) * P3.y;
+                p3result.x = Math.pow(t, 3) * SimData.P3.x;
+                p3result.y = Math.pow(t, 3) * SimData.P3.y;
 
                 return {x: p0result.x + p1result.x + p2result.x + p3result.x, y: p0result.y + p1result.y + p2result.y + p3result.y};
             }
 
             function makeResults()
             {
-                var output = "<table border='1'><tr><th>Slice</th><th>x</th><th>y</th></tr>";
-                for(var slice = 0; slice <= NUM_SLICES; ++slice) {
-                    var val = calculatePointOnCurve(slice / NUM_SLICES);
+				var output = "<div class='top-bot-space-small'><h2>Results</h2></div>";
+                output += "<table border='1'><tr><th>Slice</th><th>x</th><th>y</th></tr>";
+                for(var slice = 0; slice <= SimData.NumSlices; ++slice) {
+                    var val = calculatePointOnCurve(slice / SimData.NumSlices);
                     output += "<tr><td>" + slice + "</td><td>" + val.x + "</td><td>" + val.y + "</td></tr>";
                 }
                 output += "</table>";
@@ -89,19 +117,12 @@
             {
                 $("#results-area").hide();
                 $("#results-output").html("");
+				resetDefaults();
             }
         </script>
         <style>
-            #make-results-button {
-                margin-top: 5px;
-            }
-
             #results-area {
-                margin-top: 15px;
-            }
-
-            #reset-button {
-                margin-top: 5px;
+                margin-top: 50px;
             }
 
             table {
@@ -116,17 +137,50 @@
                     padding: 5px;
                 }
             }
+			
+			.top-bot-space-small {
+				margin: 10px 0 10px 0;
+			}
         </style>
     </head>
     <body>
         <h1>Super Cool Simulation</h1>
 
-        <div id="setup-data"></div>
-        <div><button type="button" id="make-results-button">Calculate</button></div>
+        <div id="setup-data">
+			<table border='1'>
+				<tr>
+					<th>Control Point</th>
+					<th>x</th>
+					<th>y</th>
+				</tr>
+				<tr>
+					<td>P0</td>
+					<td><input type="text" id="input-p0-x" /></td>
+					<td><input type="text" id="input-p0-y" /></td>
+				</tr>
+				<tr>
+					<td>P1</td>
+					<td><input type="text" id="input-p1-x" /></td>
+					<td><input type="text" id="input-p1-y" /></td>
+				</tr>
+				<tr>
+					<td>P2</td>
+					<td><input type="text" id="input-p2-x" /></td>
+					<td><input type="text" id="input-p2-y" /></td>
+				</tr>
+				<tr>
+					<td>P3</td>
+					<td><input type="text" id="input-p3-x" /></td>
+					<td><input type="text" id="input-p3-y" /></td>
+				</tr>
+			</table>
+			<div class="top-bot-space-small"><label>Number of Slices:</label> <input type="text" id="input-num-slices" /></div>
+			<div class="top-bot-space-small"><button type="button" id="make-results-button">Calculate</button> <button type="button" id="reset-defaults-button">Defaults</button></div>
+		</div>
 
         <div id="results-area">
             <div id="results-output"></div>
-            <div><button type="button" id="reset-button">Reset</button></div>
+            <div class="top-bot-space-small"><button type="button" id="reset-button">Reset</button></div>
         </div>
     </body>
 </html>
