@@ -46,13 +46,18 @@
 			function resetDefaults()
 			{
 				SimData.P0 = {x:0, y:0, t:0};
-				SimData.P1 = {x:3, y:9, t:0.3};
-				SimData.P2 = {x:6, y:10, t:0.6};
+				if(SimData.RealMode) {
+					SimData.P1 = {x:2.727, y:6.129, t:0.3};
+					SimData.P2 = {x:5.616, y:9.072, t:0.6};
+				}
+				else {
+					SimData.P1 = {x:3, y:9, t:0.3};
+					SimData.P2 = {x:6, y:10, t:0.6};
+				}
 				SimData.P3 = {x:10, y:10, t:1};
 				SimData.CalcP1 = {x:0, y:0, t:0};
 				SimData.CalcP2 = {x:0, y:0, t:0};
 				SimData.NumSlices = 10;
-				SimData.RealMode = false;
 
 				displaySetupData();
 			}
@@ -120,14 +125,49 @@
 
 			function calculateControlPoints()
 			{
-				if(SimData.RealmMode) {
-					// TODO: We have to actually calculate the values!
-					// For now we'll just copy over the values as if we were in normal mode.
-					SimData.CalcP1.x = SimData.P1.x;
-					SimData.CalcP1.y = SimData.P1.y;
+				if(SimData.RealMode) {
+					// See the README for the paint version of this math :)
+
+					var t = {
+						t1: SimData.P1.t,
+						t2: SimData.P2.t
+					};
+					var a = {
+						t1: Math.pow((1 - t.t1), 3),
+						t2: Math.pow((1 - t.t2), 3)
+					};
+					var b = {
+						t1: 3 * Math.pow((1 - t.t1), 2) * t.t1,
+						t2: 3 * Math.pow((1 - t.t2), 2) * t.t2
+					};
+					var c = {
+						t1: 3 * (1 - t.t1) * Math.pow(t.t1, 2),
+						t2: 3 * (1 - t.t2) * Math.pow(t.t2, 2)
+					};
+					var d = {
+						t1: Math.pow(t.t1, 3),
+						t2: Math.pow(t.t2, 3)
+					};
+
+					var det = 1 / (b.t1*c.t2 - b.t2*c.t1);
+
+					var i = {
+						t1: {
+							x: SimData.P1.x - a.t1 * SimData.P0.x - d.t1 * SimData.P3.x,
+							y: SimData.P1.y - a.t1 * SimData.P0.y - d.t1 * SimData.P3.y
+						},
+						t2: {
+							x: SimData.P2.x - a.t2 * SimData.P0.x - d.t2 * SimData.P3.x,
+							y: SimData.P2.y - a.t2 * SimData.P0.y - d.t2 * SimData.P3.y
+						}
+					};
+
+					SimData.CalcP1.x = (c.t2 * det * i.t1.x) + (-c.t1 * det * i.t2.x);
+					SimData.CalcP1.y = (c.t2 * det * i.t1.y) + (-c.t1 * det * i.t2.y);
 					SimData.CalcP1.t = SimData.P1.t;
-					SimData.CalcP2.x = SimData.P2.x;
-					SimData.CalcP2.y = SimData.P2.y;
+
+					SimData.CalcP2.x = (-b.t2 * det * i.t1.x) + (b.t1 * det * i.t2.x);
+					SimData.CalcP2.y = (-b.t2 * det * i.t1.y) + (b.t1 * det * i.t2.y);
 					SimData.CalcP2.t = SimData.P2.t;
 				}
 				else {
@@ -255,7 +295,14 @@
 			function drawCurve(context)
 			{
 				context.moveTo(getXGraphPoint(SimData.P0.x), getYGraphPoint(SimData.P0.y));
-				context.bezierCurveTo(getXGraphPoint(SimData.P1.x), getYGraphPoint(SimData.P1.y), getXGraphPoint(SimData.P2.x), getYGraphPoint(SimData.P2.y), getXGraphPoint(SimData.P3.x), getYGraphPoint(SimData.P3.y));
+				context.bezierCurveTo(
+					getXGraphPoint(SimData.CalcP1.x),
+					getYGraphPoint(SimData.CalcP1.y),
+					getXGraphPoint(SimData.CalcP2.x),
+					getYGraphPoint(SimData.CalcP2.y),
+					getXGraphPoint(SimData.P3.x),
+					getYGraphPoint(SimData.P3.y)
+				);
 				return context;
 			}
 
