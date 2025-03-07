@@ -102,3 +102,6 @@ Ideally we'd construct all the segments from the values we calculated, but this 
 ## Part 5
 Bonus Challenge!
 What if instead of defining two control points (remember, there's the "Start Point", "Control Point 1", "Control Point 2", and "End Point"), we defined two actual on-the-curve points and calculated what the control points would be?  This is useful because someone might have some rough clue about what they want the output of the curve to be and so they may want to partially define it.  In this branch, I've started adding UI for it.  Switch to the next branch [Part 5b](https://github.com/frankxw/qnd-tool-tutorial/tree/part5b) for my solution.
+
+## Part 5b
+I decided to solve the challenge of calculating the control points from some real points using linear algebra.  COMING SOON
