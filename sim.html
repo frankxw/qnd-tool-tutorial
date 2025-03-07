@@ -15,8 +15,7 @@
 				resetDefaults();
 
                 $("#make-results-button").click(function() {
-					gatherInputs();
-                    makeResults();
+                	doSimulation();
                 });
 
                 $(".reset-button").click(function() {
@@ -26,6 +25,10 @@
 				$("#reset-defaults-button").click(function() {
 					resetDefaults();
 				});
+
+				$("#input-real-mode").change(function() {
+					updateRealMode();
+			    });
             });
 			
 			var SimData = {
@@ -33,8 +36,12 @@
 				P1: {x:0, y:0},
 				P2: {x:0, y:0},
 				P3: {x:0, y:0},
-				NumSlices: 0
+				CalcP1: {x:0, y:0},
+				CalcP2: {x:0, y:0},
+				NumSlices: 0,
+				RealMode: false
 			};
+			var CalculatedPoints = [];
 			
 			function resetDefaults()
 			{
@@ -42,8 +49,16 @@
 				SimData.P1 = {x:3, y:9};
 				SimData.P2 = {x:6, y:10};
 				SimData.P3 = {x:10, y:10};
+				SimData.CalcP1 = {x:0, y:0};
+				SimData.CalcP2 = {x:0, y:0};
 				SimData.NumSlices = 10;
-				
+				SimData.RealMode = false;
+
+				displaySetupData();
+			}
+
+			function displaySetupData()
+			{
 				$("#input-p0-x").val(SimData.P0.x);
 				$("#input-p0-y").val(SimData.P0.y);
 				$("#input-p1-x").val(SimData.P1.x);
@@ -53,6 +68,24 @@
 				$("#input-p3-x").val(SimData.P3.x);
 				$("#input-p3-y").val(SimData.P3.y);
 				$("#input-num-slices").val(SimData.NumSlices);
+				$("#input-real-mode").val(SimData.RealMode);
+
+				if(SimData.RealMode) {
+					$("#input-p1-label").html("P1 (Real Point 1)");
+					$("#input-p2-label").html("P2 (Real Point 2)");
+				}
+				else {
+					$("#input-p1-label").html("P1 (Control Point 1)");
+					$("#input-p2-label").html("P2 (Control Point 2)");
+				}
+			}
+
+			function doSimulation()
+			{
+				gatherInputs();
+				calculateControlPoints();
+				calculateGraph();
+				makeOutput();
 			}
 			
 			function gatherInputs()
@@ -66,6 +99,31 @@
 				SimData.P3.x = Number($("#input-p3-x").val());
 				SimData.P3.y = Number($("#input-p3-y").val());
 				SimData.NumSlices = Number($("#input-num-slices").val());
+				SimData.RealMode = $("#input-real-mode").is(":checked");
+			}
+
+			function updateRealMode()
+			{
+				SimData.RealMode = $("#input-real-mode").is(":checked");
+				displaySetupData();
+			}
+
+			function calculateControlPoints()
+			{
+				if(SimData.RealmMode) {
+					// TODO: We have to actually calculate the values!
+					// For now we'll just copy over the values as if we were in normal mode.
+					SimData.CalcP1.x = SimData.P1.x;
+					SimData.CalcP1.y = SimData.P1.y;
+					SimData.CalcP2.x = SimData.P2.x;
+					SimData.CalcP2.y = SimData.P2.y;
+				}
+				else {
+					SimData.CalcP1.x = SimData.P1.x;
+					SimData.CalcP1.y = SimData.P1.y;
+					SimData.CalcP2.x = SimData.P2.x;
+					SimData.CalcP2.y = SimData.P2.y;
+				}
 			}
 
             function calculatePointOnCurve(t)
@@ -89,11 +147,11 @@
                 p0result.x = Math.pow(invT, 3) * SimData.P0.x;
                 p0result.y = Math.pow(invT, 3) * SimData.P0.y;
 
-                p1result.x = 3 * Math.pow(invT, 2) * t * SimData.P1.x;
-                p1result.y = 3 * Math.pow(invT, 2) * t * SimData.P1.y;
+                p1result.x = 3 * Math.pow(invT, 2) * t * SimData.CalcP1.x;
+                p1result.y = 3 * Math.pow(invT, 2) * t * SimData.CalcP1.y;
 
-                p2result.x = 3 * invT * Math.pow(t, 2) * SimData.P2.x;
-                p2result.y = 3 * invT * Math.pow(t, 2) * SimData.P2.y;
+                p2result.x = 3 * invT * Math.pow(t, 2) * SimData.CalcP2.x;
+                p2result.y = 3 * invT * Math.pow(t, 2) * SimData.CalcP2.y;
 
                 p3result.x = Math.pow(t, 3) * SimData.P3.x;
                 p3result.y = Math.pow(t, 3) * SimData.P3.y;
@@ -101,12 +159,20 @@
                 return {x: p0result.x + p1result.x + p2result.x + p3result.x, y: p0result.y + p1result.y + p2result.y + p3result.y};
             }
 
-            function makeResults()
+            function calculateGraph()
+            {
+            	CalculatedPoints.length = 0;
+
+            	for(var slice = 0; slice <= SimData.NumSlices; ++slice) {
+                    CalculatedPoints.push(calculatePointOnCurve(slice / SimData.NumSlices));
+                }
+            }
+
+            function makeOutput()
             {
                 var output = "<table border='1'><tr><th>Slice</th><th>x</th><th>y</th></tr>";
-                for(var slice = 0; slice <= SimData.NumSlices; ++slice) {
-                    var val = calculatePointOnCurve(slice / SimData.NumSlices);
-                    output += "<tr><td>" + slice + "</td><td>" + val.x + "</td><td>" + val.y + "</td></tr>";
+                for(var i = 0; i < CalculatedPoints.length; ++i) {
+                    output += "<tr><td>" + i + "</td><td>" + CalculatedPoints[i].x + "</td><td>" + CalculatedPoints[i].y + "</td></tr>";
                 }
                 output += "</table>";
 
@@ -114,6 +180,19 @@
                 $("#results-area").show();
 				
 				makeGraph();
+
+				if(SimData.RealMode) {
+					output = "<table border='1'>";
+					output += "<tr><th>Name</th><th>x</th><th>y</th></tr>"
+					output += "<tr><td>Control Point 1</td><td>" + SimData.CalcP1.x + "</td><td>" + SimData.CalcP1.y + "</tr>";
+					output += "<tr><td>Control Point 2</td><td>" + SimData.CalcP2.x + "</td><td>" + SimData.CalcP2.y + "</tr>";
+	                output += "</table>";
+
+					$("#results-real-mode").show().html(output);
+				}
+				else {
+					$("#results-real-mode").hide().html("");
+				}
             }
 
             function clearResults()
@@ -225,6 +304,7 @@
         <h1>Super Cool Simulation</h1>
 
         <div id="setup-data">
+        	<div><label>Real Mode: </label><input type="checkbox" id="input-real-mode" /></div>
 			<table border='1'>
 				<tr>
 					<th>Control Point</th>
@@ -232,22 +312,22 @@
 					<th>y</th>
 				</tr>
 				<tr>
-					<td>P0 "Starting Point"</td>
+					<td><label id="input-p0-label">P0 (Starting Point)</label></td>
 					<td><input type="text" id="input-p0-x" /></td>
 					<td><input type="text" id="input-p0-y" /></td>
 				</tr>
 				<tr>
-					<td>P1 "Control Point 1"</td>
+					<td><label id="input-p1-label">P1 "(ontrol Point 1)</label></td>
 					<td><input type="text" id="input-p1-x" /></td>
 					<td><input type="text" id="input-p1-y" /></td>
 				</tr>
 				<tr>
-					<td>P2 "Control Point 2"</td>
+					<td><label id="input-p2-label">P2 (Control Point 2)</label></td>
 					<td><input type="text" id="input-p2-x" /></td>
 					<td><input type="text" id="input-p2-y" /></td>
 				</tr>
 				<tr>
-					<td>P3 "End Point"</td>
+					<td><label id="input-p3-label">P3 (End Point)</label></td>
 					<td><input type="text" id="input-p3-x" /></td>
 					<td><input type="text" id="input-p3-y" /></td>
 				</tr>
@@ -259,8 +339,9 @@
         <div id="results-area">
 			<div class="top-bot-space-small"><h2>Results</h2></div>
 			<div class="top-bot-space-small"><button type="button" class="reset-button">Reset</button></div>
+			<div class="top-bot-space-small" id="results-real-mode"></div>
 			<div class="top-bot-space-small" id="results-graph"></div>
-            <div id="results-table"></div>
+            <div class="top-bot-space-small" id="results-table"></div>
             <div class="top-bot-space-small"><button type="button" class="reset-button">Reset</button></div>
         </div>
     </body>
