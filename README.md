@@ -98,3 +98,7 @@ context.moveTo(getXGraphPoint(SimData.P0.x), getYGraphPoint(SimData.P0.y));
 context.bezierCurveTo(getXGraphPoint(SimData.P1.x), getYGraphPoint(SimData.P1.y), getXGraphPoint(SimData.P2.x), getYGraphPoint(SimData.P2.y), getXGraphPoint(SimData.P3.x), getYGraphPoint(SimData.P3.y));
 ```
 Ideally we'd construct all the segments from the values we calculated, but this is QUICK after all...
+
+## Part 5
+Bonus Challenge!
+What if instead of defining two control points (remember, there's the "Start Point", "Control Point 1", "Control Point 2", and "End Point"), we defined two actual on-the-curve points and calculated what the control points would be?  This is useful because someone might have some rough clue about what they want the output of the curve to be and so they may want to partially define it.  In this branch, I've started adding UI for it.  Switch to the next branch [Part 5b](https://github.com/frankxw/qnd-tool-tutorial/tree/part5b) for my solution.
